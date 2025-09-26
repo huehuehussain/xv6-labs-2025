@@ -19,6 +19,39 @@ char* fmtname(char *path) {
   return buf;
 }
 
+int matchhere(char *re, char *text);
+int matchstar(int c, char *re, char *text);
+
+int match(char *re, char *text) {
+  if(re[0] == '^')
+    return matchhere(re+1, text);
+  do {
+    if(matchhere(re, text))
+      return 1;
+  } while(*text++ != '\0');
+  return 0;
+}
+
+int matchhere(char *re, char *text) {
+  if(re[0] == '\0')
+    return 1;
+  if(re[1] == '*')
+    return matchstar(re[0], re+2, text);
+  if(re[0] == '$' && re[1] == '\0')
+    return *text == '\0';
+  if(*text!='\0' && (re[0]=='.' || re[0]==*text))
+    return matchhere(re+1, text+1);
+  return 0;
+}
+
+int matchstar(int c, char *re, char *text) {
+  do {
+    if(matchhere(re, text))
+      return 1;
+  } while(*text!='\0' && (*text++==c || c=='.'));
+  return 0;
+}
+
 void run_exec(char *path, char **cmdargv, int cmdargc) {
   if(fork() == 0) {
     char *argv[MAXARG];
@@ -27,7 +60,7 @@ void run_exec(char *path, char **cmdargv, int cmdargc) {
     for(i = 0; i < cmdargc; i++)
       argv[i] = cmdargv[i];
 
-    argv[cmdargc] = path;
+    argv[cmdargc] = path; 
     argv[cmdargc+1] = 0;
 
     exec(argv[0], argv);
@@ -55,7 +88,7 @@ void find(char *path, char *target, int do_exec, char **cmdargv, int cmdargc) {
   }
 
   if(st.type == T_FILE){
-    if(strcmp(fmtname(path), target) == 0) {
+    if(match(target, fmtname(path))) {
       if(do_exec)
         run_exec(path, cmdargv, cmdargc);
       else
@@ -84,7 +117,7 @@ void find(char *path, char *target, int do_exec, char **cmdargv, int cmdargc) {
 
 int main(int argc, char *argv[]) {
   if(argc < 3){
-    fprintf(2, "usage: find <path> <filename> [-exec command...]\n");
+    fprintf(2, "usage: find <path> <pattern> [-exec command...]\n");
     exit(1);
   }
 
@@ -92,7 +125,7 @@ int main(int argc, char *argv[]) {
     find(argv[1], argv[2], 0, 0, 0);
   } else {
     if(strcmp(argv[3], "-exec") != 0) {
-      fprintf(2, "usage: find <path> <filename> [-exec command...]\n");
+      fprintf(2, "usage: find <path> <pattern> [-exec command...]\n");
       exit(1);
     }
     char **cmdargv = &argv[4];
