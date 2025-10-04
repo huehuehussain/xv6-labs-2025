@@ -1,6 +1,7 @@
 #include "kernel/types.h"
 #include "user/user.h"
 
+
 #define MAXCAND 256
 
 static char *cands_ptrs[MAXCAND];
