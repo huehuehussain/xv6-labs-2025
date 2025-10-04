@@ -120,6 +120,13 @@ sys_interpose(void)
   struct proc *p = myproc();
   p->mask = mask;
 
+  if (path[0] == '-' && path[1] == '\0') {
+    p->allowed_path[0] = '\0';
+  } else {
+    strncpy(p->allowed_path, path, sizeof(p->allowed_path));
+    p->allowed_path[sizeof(p->allowed_path)-1] = '\0';
+  }
+
   return 0;
 }
 

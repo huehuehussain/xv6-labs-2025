@@ -135,23 +135,32 @@ syscall(void)
 {
   int num;
   struct proc *p = myproc();
-
   num = p->trapframe->a7;
-  if (num >= 0 && num < 64) {   // safe bounds for bit shift
-    if ((p->mask & (1ULL << num)) != 0) {
-      // rejected by sandbox
-      p->trapframe->a0 = -1;
-      return;
-    }  
-  }
 
-  if(num > 0 && num < NELEM(syscalls) && syscalls[num]) {
-    // Use num to lookup the system call function for num, call it,
-    // and store its return value in p->trapframe->a0
-    p->trapframe->a0 = syscalls[num]();
+  if(num >= 0 && num < NELEM(syscalls) && syscalls[num]){
+      // Handle sandbox blocking for open and exec
+      if ((num == SYS_open || num == SYS_exec) && (p->mask & (1 << num))) {
+          char pathbuf[128];
+          int allow = 0;
+
+          if(argstr(0, pathbuf, sizeof(pathbuf)) >= 0){
+              // Compare with allowed path (use xv6 strncmp)
+              if(p->allowed_path[0] != '\0' &&
+                 strncmp(p->allowed_path, pathbuf, 128) == 0)
+                  allow = 1;
+          }
+
+          if(!allow){
+              p->trapframe->a0 = -1; // block syscall
+              return;
+          }
+      }
+
+      // Call the actual syscall
+      p->trapframe->a0 = syscalls[num]();
   } else {
-    printf("%d %s: unknown sys call %d\n",
-            p->pid, p->name, num);
-    p->trapframe->a0 = -1;
+      printf("%d %s: unknown sys call %d\n", p->pid, p->name, num);
+      p->trapframe->a0 = -1;
   }
 }
+
