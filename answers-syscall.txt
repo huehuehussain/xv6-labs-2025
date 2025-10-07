@@ -1,0 +1,23 @@
+Looking at the backtrace output, which function called syscall?
+usertrap()
+
+What is the value of p->trapframe->a7 and what does that value represent?
+value is 0xf and it represents the system call that the user program requested.
+
+
+What was the previous mode that the CPU was in?
+p /x $sstatus gave us 0x20000022 wich in binary is:
+0010 0000 0000 0000 0000 0000 0010 0010
+passing the p ($sstatus >> 8) & 1 gives us the privilege level which was 0
+hence the previous mode was user mode.
+
+Write down the assembly instruction the kernel is panicing at. Which register corresponds to the variable num?
+lw a5,0(a0) and a0 is the register that corresponds to num.
+
+Why does the kernel crash? 
+It tries to load from 0 which is not mapped in xv6 as scause = 0xd means a page fault on load.
+
+What is the name of the process that was running when the kernel paniced? 
+What is its process id (pid)?
+name: init
+pid: 1
