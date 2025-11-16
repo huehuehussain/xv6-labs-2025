@@ -1,3 +1,4 @@
+
 #ifdef LAB_MMAP
 gtypedef unsigned long size_t;
 typedef long int off_t;
@@ -241,3 +242,4 @@ void            netinit(void);
 void            net_rx(char *buf, int len);
 
 #endif
+

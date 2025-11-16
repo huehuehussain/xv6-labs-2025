@@ -1,0 +1,46 @@
+Question 1:
+The page-table output in pgtbltest shows how the user process’s virtual addresses are translated 
+to physical memory, including their permission bits.
+The first few virtual pages (0x0–0x4000) correspond to the program’s code and data.
+Each of these entries is valid and maps to a physical page with permissions like 0x5B, 
+meaning the memory is readable, writable, executable, and accessible from user mode. 
+This area contains the program’s text and data, and possibly some heap space.
+The virtual pages from 0x5000 to 0x9000 have no entries (PTE = 0), which means the process does 
+not use those addresses.
+At the top of the virtual address space, the last two mappings belong to special pages used by 
+every process:
+	0x3FFFFFE000 → trapframe page, where the kernel stores the process’s registers during traps 
+	and system calls.
+
+	0x3FFFFFF000 → trampoline page, containing shared code that switches between user and kernel 
+	mode.
+
+Overall, low virtual addresses store the process’s actual program memory, while the highest addresses
+are reserved for kernel-managed trapframe and trampoline pages.
+
+
+Question 2:
+0x0000000000000000 → pte 0x…5B
+Page containing user code. Permissions allow read, execute, and user access. This corresponds to 
+the code segment in print_pgtbl.
+
+0x0000000000001000 → pte 0x…5B
+Next code/data page with identical permissions.
+
+0x0000000000002000 → pte 0x…D7
+User data/stack page with read + write permissions. Matches the writable pages shown in print_pgtbl.
+
+0x0000000000003000 → pte 0x…07
+A kernel-only page (no user-access bit). User code cannot read or write this page.
+
+0x0000000000004000 → pte 0x…D7
+Another writable user data/stack page.
+
+0x0000003fffffd000 → pte 0x…13
+The USYSCALL page (used for fast getpid). User can read it but cannot write.
+
+0x0000003fffffe000 → pte 0x…C7
+The trapframe page where user registers are saved during traps.
+
+0x0000003ffffff000 → pte 0x…4B
+The trampoline page, containing read-only executable code for switching between kernel and user mode.
