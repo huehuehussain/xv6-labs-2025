@@ -1,0 +1,14 @@
+1. Function arguments are passed in registers a0–a7. In the call to printf, a0 contains 13.
+
+2. Both f and g are inlined, so there is no jal or jalr instruction calling either function.
+
+3. Called from 0x30 and printf is at 0x6f6
+
+4. 0x34
+
+5. He110 World
+
+6. Big-endian i should be: 0x726c6400. 57616 stays the same.
+
+7. It prints an undefined (garbage) value, because printf expects two integers but only one is provided, so it reads 
+an arbitrary stack value for y.
